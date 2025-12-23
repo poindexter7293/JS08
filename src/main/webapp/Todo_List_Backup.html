@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Todo List - Edit & Update Date</title>
+
+  <style>
+    #container{
+      width: 400px;
+      margin: 30px auto;
+      padding: 20px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+    }
+
+    #todoList li{
+      display: flex;
+      justify-content: space-between;
+      padding: 8px;
+      border-bottom: 1px solid #eee;
+      cursor: pointer;
+    }
+
+    .done{
+      text-decoration: line-through;
+      color: gray;
+    }
+
+    .deleteBtn{
+      color: red;
+      cursor: pointer;
+      margin-left: 10px;
+    }
+
+    .editInput{
+      width: 70%;
+      padding: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="container">
+    <h2>Todo List - 수정하면 날짜도 업데이트!</h2>
+
+    <form>
+      <label for="todoInput">할 일 입력</label>
+      <input type="text" id="todoInput">
+      <button id="addBtn">추가</button>
+    </form>
+
+    <ul id="todoList"></ul>
+  </div>
+
+<script>
+  // =========================================
+  // 1) 할 일을 입력받는 input 요소를 선택합니다.
+  //    - 목적: 사용자가 입력한 문자열을 읽어오기 위해 필요합니다.
+  const todoInput = document.querySelector("#todoInput");
+
+  // =========================================
+  // 2) "추가" 버튼 요소를 선택합니다.
+  //    - 목적: 버튼 클릭을 감지해서 새 할 일을 추가하는 동작을 시작하기 위함입니다.
+  const addBtn = document.querySelector("#addBtn");
+
+  // =========================================
+  // 3) 할 일 목록이 들어갈 <ul> 요소를 선택합니다.
+  //    - 목적: 새로 만든 <li>를 이 요소에 넣어 화면에 표시하기 위해 필요합니다.
+ 
+  const todoList = document.querySelector("#todoList");
+
+  // =========================================
+  // 4) "추가" 버튼에 클릭 이벤트를 등록합니다.
+  //    - 목적: 사용자가 버튼을 클릭하면 새 항목을 생성하도록 하기 위함입니다.
+  addBtn.addEventListener("click", function(e) {
+	  
+    // 4-1) 폼의 기본 동작(페이지 새로고침)을 막습니다.
+    //     - 이유: 새로고침되면 입력한 내용과 동적으로 만든 요소들이 사라지므로 방지해야 합니다.
+   e.preventDefault();
+
+    // 4-2) 입력값을 가져오고 앞뒤 공백을 제거(trim)합니다.
+    //     - 이유: 사용자가 "  "만 입력했을 경우 빈값으로 처리하기 위해서입니다.
+
+	const raw = todoInput.value;
+    const text = raw.trim();
+    // 4-3) 입력값이 비어있으면 경고창을 띄우고 함수를 종료(return)합니다.
+    //     - 이유: 빈 항목이 추가되는 것을 막음.
+    if (text === "") {
+      alert("입력값이 비어있습니다.");
+      return;
+    }
+
+    // 4-4) 새로운<li></li> 요소를 만듭니다. 
+    //     - 이유: 각 할 일 항목을 담을 태그가 필요합니다.
+    const item = document.createElement("li");
+
+    // 4-5) 현재 날짜(연-월-일)를 문자열로 만듭니다.
+    //     - 이유: 생성/수정일을 보여주기 위해 사용합니다.
+    const d = new Date();
+    const today = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+
+    // 4-6) <li></li> 내부에 보여줄 span요소를 아래와 같이 생성 해서 <li></li>사이에 넣습니다.
+    //<li>
+    //           <span class="text">할 일 텍스트<small>날짜</small></span>
+    //           <span class="deleteBtn">삭제</span>
+   //</li>
+    //     - 설명: .text에는 할 일 텍스트와 <small>(날짜)</small>를 넣고,
+    //       .deleteBtn은 클릭 시 항목을 삭제하는 버튼 역할을 합니다.
+  item.innerHTML = `<span class="text">${todoInput.value} <small>(${today})</small></span>
+                    <span class="deleteBtn">삭제</span>`;
+
+    
+      	  		
+  			
+
+
+    // 4-7) 만들어진 li를 ul(#todoList)에 추가하여 화면에 보이게 합니다.
+    todoList.appendChild(item);
+
+    // 4-8) 입력창을 비워보여주기 위해 빈 문자열 설정(다음 입력을 위해서).
+    
+    todoInput.value = "";
+
+    // =========================================
+    // 5) '완료 토글' 기능: li를 클릭하면 완료 표시(줄긋기)가 토글되도록 합니다.
+    //    - 목적: 사용자가 항목을 완료 처리/해제 할 수 있게 하기 위함.
+    //    - 구현 포인트:
+    //       * 단, 클릭한 대상이 삭제 버튼(.deleteBtn)인 경우에는 토글을 실행하면 안 됩니다.
+    //       * 코드는 item.addEventListener("click", function(e) { ... });
+    item.addEventListener("click", function(e) {
+      // 5-1) 클릭한 요소가 삭제 버튼이면 종료(삭제 처리 부분이 따로 있음).
+      //     - 어떤 코드:
+      //         if (e.target.classList.contains("deleteBtn")) return;
+      if (e.target.classList.contains("deleteBtn")) return;
+
+      // 5-2) 완료 표시를 위해 CSS 클래스 'done'을 토글합니다.
+      //     - 어떤 코드: item.classList.toggle("done");
+      //     - 설명: 'done' 클래스는 CSS에서 줄긋기 스타일을 담당합니다.
+      item.classList.toggle("done");
+    });
+
+    // =========================================
+    // 6) 삭제 기능: .deleteBtn을 찾아 클릭하면 해당 li를 제거합니다.
+    //    - 목적: 사용자가 항목을 삭제할 수 있게 합니다.
+    const deleteBtn = item.querySelector(".deleteBtn");
+    deleteBtn.addEventListener("click", function() {
+      // 실제 삭제 코드: 부모(ul)에서 현재 li를 제거
+      item.parentNode.removeChild(item);
+ 
+    });
+
+    // =========================================
+    // 7) 수정 기능: .text(span)을 더블클릭하면 input으로 바꿔 수정할 수 있게 합니다.
+    //    - 목적: 사용자가 항목 내용을 수정할 수 있도록 함.
+    //    - 동작 흐름 요약:
+    //       1) 기존 span(.text)의 HTML을 저장(원복을 위해)
+    //       2) <input> 요소 생성하고 기존 텍스트를 value에 넣음
+    //       3) span을 input으로 교체하고 focus를 줌
+    //       4) Enter나 blur(포커스 아웃) 시 저장, Esc는 취소
+    const textSpan = item.querySelector(".text");
+    textSpan.addEventListener("dblclick", function() {
+      // 7-1) 기존 HTML 전체(텍스트 + 날짜)를 저장합니다.
+      //     - 이유: 취소 시 원래 내용으로 돌리기 위해 필요합니다.
+      const oldTextHTML = textSpan.innerHTML;
+
+      // 7-2) 날짜(<small>)를 제외한 순수 텍스트만 추출합니다.
+      //     - 설명: <small> 부분은 날짜 마크업이므로 수정 대상 텍스트에서 제외해야 합니다.
+      //const pure = oldTextHTML.trim();
+	        const pure = oldTextHTML.replace(/<small>\(.*\)<\/small>/, "").trim();
+      
+      // 7-3) 수정용 input 요소를 생성하고 클래스/타입/값을 설정합니다.
+      const input = document.createElement("input");
+      input.type = "text";
+      input.classList.add("editInput");
+      input.value = pure;
+
+      // 7-4) 화면에서 span을 input으로 교체합니다.
+      //     - 이후부터 사용자가 직접 수정할 수 있습니다.
+      textSpan.replaceWith(input);
+
+      // 7-5) input에 포커스를 주어 바로 입력할 수 있게 합니다.
+         input.focus();
+
+      // =========================================
+      // 7-6) 입력 이벤트 설정: Enter → 저장, Escape → 취소
+      //     - 이유: 사용자가 키보드로 빠르게 완료하거나 취소할 수 있게 하기 위함.
+      input.addEventListener("keydown", function(event) {
+        // 7-6a) Enter 키를 누르면 저장 함수(saveEdit)를 호출합니다.
+        //      - 어떤 코드: if (event.key === "Enter") saveEdit();
+        if (event.key === "Enter") {
+          saveEdit();
+        }
+
+        // 7-6b) Escape 키를 누르면 취소 함수(cancelEdit)를 호출합니다.
+        //      - 어떤 코드: if (event.key === "Escape") cancelEdit();
+        if (event.key === "Escape") {
+          cancelEdit();
+        }
+      });
+
+      // 7-7) input에서 포커스가 벗어나면 자동으로 저장합니다.
+      //     - 어떤 코드: input.addEventListener("blur", saveEdit);
+      input.addEventListener("blur", saveEdit);
+
+      // =========================================
+      // 7-8) 저장 함수: 수정 내용을 확정하고 날짜를 갱신한 뒤 span으로 되돌립니다.
+      //     - 주요 동작:
+      //         1) 현재 날짜 생성(수정 날짜)
+      //         2) 새로운 span(.text) 요소 생성
+      //         3) span에 input.value와 수정 날짜를 넣음
+      //         4) input.replaceWith(newSpan)로 복원
+      //         5) 수정 기능(더블클릭)과 완료 토글 기능이 계속 작동하도록 이벤트 재연결
+      function saveEdit() {
+        // 7-8a) 새 날짜 생성 (수정한 날짜로 업데이트)
+        const now = new Date();
+        const updatedDate = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
+
+        // 7-8b) 새 span 요소 생성 및 클래스 부여
+        const newSpan = document.createElement("span");
+        newSpan.classList.add("text");
+
+        // 7-8c) 입력값(value)과 수정 날짜를 결합하여 innerHTML로 설정
+        //       - 예: "청소하기 <small>(2025-11-14)</small>"
+        newSpan.innerHTML = `${input.value} <small>(${updatedDate})</small>`;
+
+        // 7-8d) input을 새 span으로 교체(화면 복원)
+        input.replaceWith(newSpan);
+
+        // 7-8e) 새로 만든 span에 다시 더블클릭 이벤트를 연결하기 위해 등록합니다.
+        //       - arguments.callee를 쓰면 현재 실행 중인 익명 함수 참조가 안 되는 상황이 있을 수 있어
+        //         여기서는 같은 동작을 수행하는 익명 함수 대신 새로 이벤트를 연결합니다.
+        //       - 구현: newSpan.addEventListener("dblclick", <수정 로직 함수>);
+        //       - 간단하게: 새 span 클릭시 같은 동작을 수행하도록 파일 내의 처리 흐름을 재사용하면 됩니다.
+        //       - 여기서는 즉시 동일한 동작을 연결하기 위해 클릭 핸들러를 재사용합니다.
+        newSpan.addEventListener("dblclick", function() {
+        	
+        	saveEdit();
+        	
+          // (중복 방지를 위해 동일한 수정 로직을 간단히 재호출하는 방법)
+          // 이 내부에 동일한 '더블클릭 -> input으로 바꾸는 로직'을 넣으면 됩니다.
+          // 단순화를 위해 새 span을 더블클릭했을 때 원래의 더블클릭 동작을 실행하려면
+          // 바깥에서 사용한 로직(7번 블록)을 함수로 분리하는 것이 좋습니다.
+          // 여기서는 교육 목적상 간단히 다시 트리거하지 않고, 필요하면 함수 분리 예제를 제공합니다.
+        });
+
+        // 7-8f) 완료 토글 기능을 유지하기 위해 li(부모)에 클릭 이벤트가 작동하도록 보장합니다.
+        //       - 이미 item(부모)에 이벤트가 있다면 중복 등록 주의가 필요합니다.
+        //       - 안전하게 동작하도록 하기 위해 부모의 클릭 이벤트는 한 번만 등록하는 방식이 더 좋습니다.
+        //       - 여기서는 기존 구조(일회성 재연결)는 작동하므로 간단한 예시만 남깁니다.
+        newSpan.parentNode.addEventListener("click", function(e) {
+          if (e.target.classList.contains("deleteBtn")) return;
+          item.classList.toggle("done");
+        });
+      } // end saveEdit
+
+      // =========================================
+      // 7-9) 취소 함수: 수정 중 ESC를 눌렀을 때 원래 내용을 복원합니다.
+      //     - 동작:
+      //         1) 원래 저장해 둔 oldTextHTML을 사용하여 span을 새로 만들고
+      //         2) input을 그 span으로 교체
+      //         3) 다시 더블클릭 이벤트가 동작하도록 설정
+     
+      function cancelEdit() {
+        // 7-9a) 원래 span 복구
+	const cancelSpan = document.createElement("span");
+    cancelSpan.innerHTML = oldTextHTML;    
+        
+    // 7-9b) 화면 복원: input -> 원래 span으로 되돌리기
+        input.replaceWith(cancelSpan);
+    // 7-9c) 복구한 span에 다시 더블클릭 이벤트를 연결
+        cancelSpan.addEventListener("dblclick", function() {
+          // 동일한 더블클릭 수정 로직 재연결
+          // (위 saveEdit 함수와 마찬가지로 함수로 분리하면 좋습니다)
+          // 여기서는 간단히 다시 트리거하지 않고, 필요하면 함수 분리 예제를 제공합니다.
+        });
+    
+     // 마찬가지로 실제로는 위의 더블클릭 로직을 재사용하도록 함수로 분리하면 좋습니다.
+      } // end cancelEdit
+
+    }); // end textSpan dblclick
+  }); // end addBtn click
+</script>
+
+
+</body>
+</html>
+
+
+
+

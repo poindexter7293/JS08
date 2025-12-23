@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>자식 요소 노드 삭제</title>
+</head>
+<body>
+
+	<h1>Web Programming</h1>
+		<ul id = "items">
+			<li>HTML</li>
+            <li>CSS</li>
+            <li>JavaScript</li>
+		</ul>
+		
+	<script type="text/javascript">
+		
+		//모든 li 요소를 배열에 담아 선택해 옵니다.
+		const items = document.querySelectorAll("ul#items li");
+			for(let item of items) {
+				
+				item.addEventListener("click", function() {
+					//this : 이벤트가 발생한 대상 요소를 선택해 오는 예약어
+					//this.parentNode 속성 호출
+					
+					
+					//this.parentsNode.removeChild(this);
+					//this.parentNode.removeChild(this);
+					
+					
+					
+					
+				});
+				
+				
+				
+				
+				
+				
+				
+			}	
+	
+	
+	</script>	
+</body>
+</html>

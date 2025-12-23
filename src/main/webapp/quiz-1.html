@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>연습문제 1</title>
+    <link rel="stylesheet" href="css/quiz-1.css" />
+  </head>
+  <body>
+    <div id="container">
+      <h1>참가자 명단</h1>
+      <form>
+        <ul id="userInput">
+          <li>
+            <label for="username">이 름</label>
+            <input type="text" id="username" />
+          </li>
+          <li>
+            <label for="major">전 공</label>
+            <input type="text" id="major" />
+          </li>
+        </ul>
+        <button>등록하기</button>
+      </form>
+
+      <table id="attendant">
+        <thead>
+          <tr>
+            <th>이 름</th>
+            <th>전 공</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <script>
+      //<input type="text" id="username" /> 요소 선택 후 저장
+      const username = document.querySelector("#username");
+
+      // <input type="text" id="major" /> 요소 선택 후 저장
+      const major = document.querySelector("#major");
+
+      // <button>등록하기</button> 요소 선택 후 저장
+      const bttn = document.querySelector("button");
+
+//<button>등록하기</button> click 이벤트 등록      
+      bttn.addEventListener("click", (e) => {
+
+        //<button>등록하기</button> click 이벤트 차단 해 아래 코드 작성되게 하기 
+        e.preventDefault();
+
+        //<tbody></tbody> 요소 선택 해서 저장
+        let tbody = document.querySelector("#attendant tbody");
+    
+         //<tr></tr> 요소노드 새로 생성 해서 저장
+        let newTr = document.createElement("tr");
+       
+// 첫번째 셀에 입력한 이름 넣기
+        //<td></td> 요소노드 새로 생성 해서 저장
+        let nameTd =  document.createElement("td");    
+        //<td>김길동</td>
+        nameTd.innerText = username.value;
+        //비우기 
+        username.value = "";
+
+// 두번째 셀에 입력한 전공 넣기
+        //<td></td> 요소노드 새로 생성 해서 저장
+        let majorTd = document.createElement("td");    
+        //<td>컴공</td> 
+        majorTd.innerText = major.value;
+        //비우기   
+        major.value = "";
+
+// 두 셀을 새 줄에 추가하기
+        //<tr>  
+        //   <td>김길동</td> 
+        //</tr>
+        
+        newTr.appendChild(nameTd);
+
+        // <tr>
+        //    <td>김길동</td>
+        //    <td>컴공</td>
+        //  </tr>
+        newTr.appendChild(majorTd);
+
+// 새 줄을 tbody에 추가하기
+        /*
+          <tbody>
+              <tr>
+                <td>김길동</td>
+                <td>컴공</td>
+              </tr> 
+          </tbody>
+        */
+        tbody.appendChild(newTr);
+
+      });
+    </script>
+  </body>
+</html>

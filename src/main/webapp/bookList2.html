@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+
+	<link rel="stylesheet" href="css/bookList.css">
+
+</head>
+<body>
+  <div id="container">
+    <h1>Book List</h1>
+    <form action = "a.jsp">
+      <ul id="bookInfo">
+        <li>
+          <label for="title">제 목</label>
+          <input type="text" id="title">
+        </li>    
+        <li>
+          <label for="author">저 자</label>
+          <input type="text" id="author">
+        </li>   
+      </ul>
+    
+      <button type="reset">취소하기</button>
+      <button id="save">저장하기</button>
+    </form>
+    
+    <ul id="bookList"></ul> <!--정보가 표시될 영역-->
+  </div>
+  
+  <script type="text/javascript">
+  		//첵 제목을 입력할 수 있는 title 요소 선택
+  		const title = document.querySelector("#title");
+  		//저자 입력할 수 있는 input 요소 선택
+  		const author = document.querySelector("#author");
+  		//저장하기 버튼 button 요소 선택
+  		const save = document.querySelector("#save");
+  		//정보가 표시될 영역 bookList 요소 선택
+  		const bookList = document.querySelector("#bookList");
+  		
+  		save.addEventListener("click", addItem);
+  		
+  		function addItem(e){
+  			e.preventDefault();
+  			
+  	  		const item = document.createElement("li");
+  			item.innerHTML = `${title.value} - ${author.value}
+  				<span class="delButton">삭제</span>`;
+  			
+  			bookList.appendChild(item);
+  			
+  			title.value = "";
+  			author.value = "";
+  		
+  			
+  			//동적으로 생성한 삭제<span> 모두 배열에 담아 선택해 옴
+  			
+  			const delButtons = document.querySelectorAll(".delButton");
+  			
+  			for(let delButton of delButtons){
+  			delButton.addEventListener("click", function(){
+  				
+  				//this.parentNode.remove();
+  				//this.parentNode.parentNode.removeChild(this.parentNode);
+  				let list = this.parentNode;
+  				list.parentNode.removeChild(list);
+  				
+  				
+  				});		
+  			
+  			
+  			
+  		} }
+  		
+  		
+  		
+  		
+  		/* save.addEventListener("click", (e) => {
+  			e.preventDefault();  			
+		
+  		const item = document.createElement("li");
+  			item.innerHTML = `${title.value} - ${author.value}
+  				<span class="delButton">삭제</span>`;
+  			
+  			bookList.appendChild(item);
+  			
+  			title.value = "";
+  			author.value = "";
+  		
+  			
+  			//동적으로 생성한 삭제<span> 모두 배열에 담아 선택해 옴
+  			
+  			const delButtons = document.querySelectorAll(".delButton");
+  			
+  			for(let delButton of delButtons){
+  			delButton.addEventListener("click", function(){
+  				
+  				//this.parentNode.remove();
+  				//this.parentNode.parentNode.removeChild(this.parentNode);
+  				
+  				let list = this.parentNode;
+  				list.parentNode.removeChild(list);
+  				
+  				
+  				});	
+  				
+  			}
+  		});*/
+  		
+  		
+  		
+  </script>
+</body>
+</html>

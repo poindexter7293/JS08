@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>종합 DOM 실무 예제</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+    input, button, select { padding: 6px; margin-right: 6px; }
+    #total { font-weight: bold; font-size: 18px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+
+<h2>상품 관리 시스템</h2>
+
+<!-- 상품 등록 -->
+<div>
+  <input id="nameInput" placeholder="상품명">
+  <input id="priceInput" type="number" placeholder="가격">
+  <button id="addBtn">등록</button>
+</div>
+
+<!-- 검색 & 정렬 -->
+<div style="margin-top:10px;">
+  <input id="searchInput" placeholder="상품 검색">
+  <select id="sortSelect">
+    <option value="none">정렬 없음</option>
+    <option value="asc">가격 낮은 순</option>
+    <option value="desc">가격 높은 순</option>
+  </select>
+</div>
+
+<!-- 상품 리스트 테이블 -->
+<table>
+  <thead>
+    <tr>
+      <th>상품명</th>
+      <th>가격</th>
+      <th>삭제</th>
+    </tr>
+  </thead>
+  <tbody id="productTable"></tbody>
+</table>
+
+<!-- 총합 -->
+<div id="total">총합: 0 원</div>
+
+<script>
+	/* ===================================================================
+	전체 목적 (한 줄 요약)
+	- 이 스크립트는 '상품 관리' 화면의 동작을 담당합니다.
+	- 사용자가 상품을 등록/검색/정렬/삭제 하면 화면(테이블)과 내부 데이터가
+	  자동으로 동기화(같이 바뀜)됩니다.
+	
+	비전공자용 핵심 개념 미리보기
+	- HTML 요소 = 화면에 있는 입력창, 버튼, 테이블 같은 것들
+	- DOM = 자바스크립트가 HTML을 읽고 수정할 수 있게 해 주는 구조
+	- 배열(products) = 메모리에 저장된 상품 목록(작은 데이터베이스처럼 생각)
+	- render() = 현재 배열 상태를 화면으로 다시 그려주는 함수
+	=================================================================== */
+	
+	/* =========================
+	1) 화면 요소(HTML) 가져오기
+	=========================
+	document.getElementById(...) : HTML에서 id가 붙은 요소를 찾아서 변수에 담음
+	변수에 담아두면 그 요소를 반복해서 조작할 수 있음.
+	*/
+	const nameInput = document.getElementById("nameInput");   // 상품명 입력칸
+	const priceInput = document.getElementById("priceInput"); // 가격 입력칸 (type=number)
+	const addBtn = document.getElementById("addBtn");         // 등록 버튼
+	const searchInput = document.getElementById("searchInput"); // 검색 입력창
+	const sortSelect = document.getElementById("sortSelect");   // 정렬 옵션(select)
+	const table = document.getElementById("productTable");      // tbody 요소 (테이블 본문)
+	const total = document.getElementById("total");             // 총합을 보여주는 영역
+	
+	/* =========================
+	2) 내부 데이터 구조 설명
+	=========================
+	products 배열이 실제 상품 목록을 저장합니다.
+	- 실무에서는 DB/서버에 저장하지만, 여기서는 메모리에 저장(탭을 닫으면 사라짐)
+	- 각 상품은 객체(object)로 저장: { id, name, price }
+	- id는 상품을 고유하게 식별하기 위해 사용 (나중에 삭제/수정할 때 편리)
+	*/
+	let products = []; // 초기에는 비어 있음
+	
+	/* ==================================================
+	3) 상품 등록: 버튼 클릭 시 실행되는 로직
+	- 입력 검증: 값이 비었거나 가격이 숫자가 아닌 경우 경고
+	- 상품 객체를 만들고 배열(products)에 추가
+	- 입력창을 비우고 화면을 다시 그림(render 호출)
+	================================================== */
+	addBtn.addEventListener("click", () => {
+	// 1) 사용자가 입력한 값을 가져와서 앞뒤 공백을 제거
+	const name = nameInput.value.trim(); // "  노트북  " -> "노트북"
+	const price = Number(priceInput.value); // 문자열을 숫자로 변환: "120000" -> 120000
+	
+	// 2) 간단한 입력 체크
+	//    !price 는 price가 0, NaN(숫자가 아님), 빈문자열 등일 때 true
+	//    실무에서는 더 정교한 검증(음수 체크 등)을 추가합니다.
+	if (name === "" || !price) {
+	 alert("상품명과 가격을 올바르게 입력해주세요.");
+	 return; // 여기서 함수 종료 -> 다음 로직을 수행하지 않음
+	}
+	
+	// 3) 고유 id 생성
+	//    Date.now()는 현재 시간을 밀리초로 반환 -> 거의 항상 유일
+	//    Math.random()을 더해 충돌 가능성을 더욱 낮춤
+	const id = Date.now().toString() + Math.floor(Math.random() * 1000).toString();
+	
+	// 4) 상품 객체를 배열에 추가
+	products.push({ id, name, price });
+	
+	// 5) 입력창 초기화 (사용자 경험 향상)
+	nameInput.value = "";
+	priceInput.value = "";
+	
+	// 6) 화면 갱신: 내부 데이터(products)에 따라 테이블과 총합을 다시 그림
+	render();
+	});
+	
+	/* ==================================================
+	4) 삭제 함수 (인자로 상품 id를 받도록 구현)
+	- render()에서 각 행의 삭제 버튼에 이 함수를 연결함
+	- 배열에서 해당 id를 찾아서 제거(필터링) 후 다시 렌더
+	================================================== */
+	function deleteProductById(id) {
+	// filter: id가 다른 것만 남김 -> 결과는 새로운 배열
+	products = products.filter(item => item.id !== id);
+	render();
+	}
+	
+	/* ==================================================
+	5) 검색 입력 처리
+	- 사용자가 검색창에 글자 입력할 때마다 render()를 호출해 화면 갱신
+	- 실시간 검색(입력할 때마다 결과 바뀜)
+	================================================== */
+	searchInput.addEventListener("input", () => {
+	render();
+	});
+	
+	/* ==================================================
+	6) 정렬(select) 변경 처리
+	- 옵션이 바뀌면 render()를 호출해 정렬 적용
+	================================================== */
+	sortSelect.addEventListener("change", () => {
+	render();
+	});
+	
+	/* ==================================================
+	7) 핵심: render() 함수 (항상 천천히 읽어볼 것)
+	- 역할: 현재 products 배열 상태에 맞춰 화면(테이블)과 총합을 다시 그리는 함수
+	- 동작 순서 요약:
+	  1) 테이블 초기화
+	  2) 검색어로 products에서 보여줄 목록을 고름(filter)
+	  3) 정렬을 적용(sort)
+	  4) 화면에 행을 하나씩 추가(createElement + appendChild)
+	  5) 각 행의 삭제 버튼에 이벤트 연결 (id 기반 삭제)
+	  6) 총합을 계산해 UI 갱신
+	================================================== */
+	function render() {
+	// 1) 기존 테이블 내용 모두 지움 (중복 렌더 방지)
+	table.innerHTML = ""; // tbody의 HTML을 빈 문자열로 만들어 모든 행 제거
+	
+	// 2) 검색어 읽기 (검색은 대소문자 구분 안함)
+	const keyword = searchInput.value.trim().toLowerCase();
+	
+	// 3) 검색으로 보여줄 목록 선택 (filter)
+	//    includes는 문자열에 키워드가 포함되어 있는지 확인
+	let displayList = products.filter(item =>
+	 item.name.toLowerCase().includes(keyword)
+	);
+	
+	// ----------------------------------------------------------
+	// 4) 선택된 목록(displayList)에 정렬 적용하는 부분
+	// ----------------------------------------------------------
+	// sortSelect.value는 <select> 태그에서 사용자가 선택한 옵션 값입니다.
+	// 예: <option value="asc">가격 낮은 순</option>
+//	     <option value="desc">가격 높은 순</option>
+	//
+	// 즉, 사용자가 "가격 낮은 순"을 선택했는지,
+	// 아니면 "가격 높은 순"을 선택했는지를 확인하여
+	// 그에 맞게 배열(displayList)을 정렬하는 기능입니다.
+	// ----------------------------------------------------------
+
+
+	// 만약 사용자가 "가격 낮은 순" (asc = ascending) 을 선택한 경우
+	if (sortSelect.value === "asc") {
+
+	    // displayList.sort(...)는 배열을 정렬하는 자바스크립트 함수입니다.
+	    // sort 안에 들어가는 (a, b) => a.price - b.price 는 **정렬 기준 함수**입니다.
+	    //
+	    // 정렬 기준 함수는 다음처럼 작동합니다:
+	    // 1) 배열의 요소 2개(a, b)를 비교함
+	    // 2) a.price - b.price 의 결과가
+	    //      - 음수면  a 가 b보다 먼저 위치해야 한다
+	    //      - 양수면  b 가 a보다 먼저 위치해야 한다
+	    //      - 0이면 두 값의 순서를 바꿀 필요 없다
+	    //
+	    // 따라서:
+	    //   작은 가격 - 큰 가격 = 음수  → 작은 값이 앞으로 감 (오름차순)
+	    //   큰 가격 - 작은 가격 = 양수  → 큰 값이 뒤로 감 (오름차순)
+	    //
+	    // 예: price: 1000, 3000, 2000 이 있다고 했을 때:
+	    //   (1000-3000) = -2000 → 1000이 더 앞
+	    //   (3000-2000) = 1000  → 2000이 더 앞
+	    //
+	    // 결국 전체가 "가격 낮은 순"으로 정렬됩니다.
+	    displayList.sort((a, b) => a.price - b.price);
+
+
+	// 사용자가 "가격 높은 순" (desc = descending) 을 선택한 경우
+	} else if (sortSelect.value === "desc") {
+
+	    // 이번에는 비교 방식이 정반대입니다.
+	    // (a, b) => b.price - a.price
+	    //
+	    // 같은 논리지만 순서가 반대로 적용됩니다:
+	    //   큰 값 - 작은 값 = 양수  → 큰 값이 앞으로 온다
+	    //   작은 값 - 큰 값 = 음수  → 작은 값이 뒤로 간다
+	    //
+	    // 즉, displayList가 "가격 높은 순"으로 정렬됩니다.
+	    //
+	    // 예: price: 1000, 3000, 2000 이 있다고 하면:
+	    //   (3000-1000) = 2000 → 3000이 더 앞
+	    //   (2000-1000) = 1000 → 2000이 더 앞
+	    //
+	    // 최종 결과 → 3000, 2000, 1000 (내림차순)
+	    displayList.sort((a, b) => b.price - a.price);
+	}
+
+	
+	// 5) 테이블에 행을 추가하면서 총합 계산
+	let sum = 0; // 총합을 누적할 변수
+	
+	// forEach로 각 상품을 처리
+	displayList.forEach((item) => {
+	 // a) 행(tr) 요소 생성
+	 const tr = document.createElement("tr");
+	
+	 // b) 상품명 칸(td) 만들고 내용 넣기
+	 const tdName = document.createElement("td");
+	 tdName.textContent = item.name; // 텍스트로 상품명 표시
+	
+	 // c) 가격 칸 만들기
+	 const tdPrice = document.createElement("td");
+	 // toLocaleString(): 숫자에 쉼표를 넣어 읽기 쉽게 포맷함 (예: 120000 -> "120,000")
+	 tdPrice.textContent = item.price.toLocaleString() + " 원";
+	
+	 // d) 삭제 칸과 버튼 만들기
+	 const tdDelete = document.createElement("td");
+	 const btn = document.createElement("button");
+	 btn.textContent = "삭제";
+	
+	 // 여기서 중요한 부분: 삭제 버튼은 '해당 상품의 id'를 사용해서 삭제함
+	 // 이유: 화면에 보여지는 목록(displayList)은 검색/정렬로 순서가 바뀔 수 있음.
+	 //      인덱스(번호)를 사용하면 잘못된 항목을 지울 수 있기 때문에 id 기반으로 안전하게 삭제.
+	 btn.addEventListener("click", () => {
+	   deleteProductById(item.id); // 클릭하면 해당 id 상품을 삭제
+	 });
+	
+	 tdDelete.appendChild(btn); // td 내부에 버튼 넣기
+	
+	 // e) tr에 td들을 순서대로 붙이기
+	 tr.appendChild(tdName);
+	 tr.appendChild(tdPrice);
+	 tr.appendChild(tdDelete);
+	
+	 // f) 완성된 tr을 테이블(tbody)에 붙이기
+	 table.appendChild(tr);
+	
+	 // g) 총합 누적
+	 sum += item.price;
+	});
+	
+	// 6) 최종 총합을 화면에 표시
+	total.textContent = "총합: " + sum.toLocaleString() + " 원";
+	}
+	
+	/* ==================================================
+	8) 초기 화면 렌더링
+	- 앱을 처음 열면 빈 테이블이라도 한 번 그려주는 것이 좋음
+	================================================== */
+	render();
+	
+	/* ==================================================
+	추가 설명 / 팁 (비전공자용)
+	- 배열(products)에 push하면 데이터만 추가되는 것이고, 화면이 자동으로 바뀌지 않음.
+	  그래서 데이터 변경 후에는 반드시 render()를 호출해야 화면과 데이터가 일치함.
+	- 이벤트(event)란 '사용자가 뭔가를 했을 때(클릭, 입력 등)' 발생하는 신호이며,
+	  addEventListener()로 그 신호를 듣고 원하는 동작을 연결함.
+	- createElement()로 만든 요소는 화면에 바로 나타나지 않음. appendChild()로
+	  문서(HTML)에 붙여야 비로소 보임.
+	- toLocaleString()은 숫자를 읽기 쉽게 바꿔주므로 실제 서비스에서 자주 씀.
+	- 이 코드는 '서버에 저장'하는 부분이 없음 (메모리 전용) → 새로고침하면 모두 사라짐.
+	  로컬스토리지(localStorage)나 서버 API를 연결하면 데이터를 영구 저장할 수 있음.
+	=================================================================== */
+
+</script>
+
+</body>
+</html>
